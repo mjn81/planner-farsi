@@ -50,7 +50,7 @@ let saveTimer;
 function save() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage full/blocked */ } }, 250);
-  scheduleSync(3000);
+  scheduleSync(6000);
 }
 window.addEventListener('pagehide', () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} });
 try { navigator.storage?.persist?.(); } catch {}
@@ -260,6 +260,12 @@ function route() {
   return { view: 'cover', n: 0 };
 }
 
+function applyTheme() {
+  const root = document.documentElement;
+  root.dataset.theme = state.theme;
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
+}
+
 function render(keepScroll = false) {
   const y = window.scrollY;
   closePop();
@@ -267,11 +273,10 @@ function render(keepScroll = false) {
   const root = document.documentElement;
   root.lang = state.lang;
   root.dir = fa() ? 'rtl' : 'ltr';
-  root.dataset.theme = state.theme;
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
+  applyTheme();
   document.title = `${t('appName')} · ${t('coverKicker')}`;
   const body = current.view === 'day' ? dayHTML(current.n) : current.view === 'cal' ? calHTML() : coverHTML();
-  app.innerHTML = `${navHTML(current.view, current.n)}<main class="view-${current.view}">${body}</main><footer class="credit">${esc(t('madeBy'))} <a href="https://github.com/mjn81" target="_blank" rel="noopener noreferrer">mjn</a> · <a href="https://github.com/mjn81" target="_blank" rel="noopener noreferrer">github.com/mjn81</a></footer><div id="toast" role="status" aria-live="polite"></div>`;
+  app.innerHTML = `${navHTML(current.view, current.n)}<main class="view-${current.view}">${body}</main><footer class="credit">${esc(t('madeBy'))} <a href="https://github.com/mjn81" target="_blank" rel="noopener noreferrer">mjn</a></footer><div id="toast" role="status" aria-live="polite"></div>`;
   window.scrollTo(0, keepScroll ? y : 0);
 }
 window.addEventListener('hashchange', () => render());
@@ -411,7 +416,7 @@ document.addEventListener('click', (e) => {
       openPop(btn, menuHTML(), 'menu');
       break;
     }
-    case 'theme': state.theme = btn.dataset.v; save(); render(true); break;
+    case 'theme': state.theme = btn.dataset.v; touchField('theme'); save(); render(true); break;
     case 'sync': closePop(); openModal(); break;
     case 'closemodal': closeModal(); break;
     case 'syncmode': draft.mode = draft.mode === 'create' ? 'signin' : 'create'; draft.msg = null; redrawModal(); break;
@@ -464,7 +469,7 @@ async function importFile(file) {
 let acc = Sync.account.load();
 let syncState = acc ? 'ok' : 'off';
 let lastSyncError = '';
-let syncTimer, syncing = false, syncAgain = false, dirty = 0, staleView = false;
+let syncTimer, syncing = false, syncAgain = false, dirty = 0, staleView = false, blockedUntil = 0, lastRun = 0;
 
 function setSyncState(s) {
   syncState = s;
@@ -475,8 +480,10 @@ function setSyncState(s) {
 function scheduleSync(delay = 0) {
   if (!acc) return;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(runSync, delay);
+  syncTimer = setTimeout(runSync, Math.max(delay, blockedUntil - Date.now()));
 }
+/* Passive triggers (focus, reconnect, timer) are throttled so idle tabs never hammer the server. */
+function kick() { if (Date.now() - lastRun > 20000) scheduleSync(0); }
 
 const typing = () => app.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
 
@@ -485,6 +492,7 @@ function applyMerged(merged) {
   if (Sync.canon(next) === Sync.canon(state)) return;
   state = next;
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  applyTheme(); // never wait for the typing guard: the theme is not part of any field being edited
   if (typing()) staleView = true; else render(true);
 }
 document.addEventListener('focusout', () => setTimeout(() => { if (staleView && !typing()) { staleView = false; render(true); } }, 0));
@@ -494,6 +502,7 @@ async function runSync() {
   if (syncing) { syncAgain = true; return; }
   if (!navigator.onLine) { setSyncState('offline'); return; }
   syncing = true;
+  lastRun = Date.now();
   setSyncState('syncing');
   const v = dirty;
   try {
@@ -504,18 +513,19 @@ async function runSync() {
     setSyncState('ok');
   } catch (e) {
     lastSyncError = e.code || 'server';
+    if (e.status === 429) blockedUntil = Date.now() + (e.retryAfter || 60) * 1000;
     setSyncState(e.code === 'offline' ? 'offline' : 'error');
   } finally {
     syncing = false;
     if (syncAgain) { syncAgain = false; scheduleSync(500); }
   }
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleSync(0); });
-window.addEventListener('online', () => scheduleSync(0));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+window.addEventListener('online', () => kick());
 window.addEventListener('offline', () => acc && setSyncState('offline'));
-setInterval(() => { if (!document.hidden) scheduleSync(0); }, 45000);
+setInterval(() => { if (!document.hidden) kick(); }, 120000);
 
-const ERR = { 'no-account': 'errNoAccount', 'wrong-password': 'errWrong', exists: 'errExists', locked: 'errLocked', 'not-configured': 'errNotConfigured', unavailable: 'errUnavailable', offline: 'errOffline', decrypt: 'errDecrypt' };
+const ERR = { 'no-account': 'errNoAccount', 'wrong-password': 'errWrong', exists: 'errExists', locked: 'errLocked', 'rate-limited': 'errRate', capacity: 'errCapacity', 'too-large': 'errTooLarge', 'not-configured': 'errNotConfigured', unavailable: 'errUnavailable', offline: 'errOffline', decrypt: 'errDecrypt' };
 const errText = (code) => t(ERR[code] || 'errServer');
 
 /* sync dialog */

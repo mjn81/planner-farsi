@@ -2,7 +2,7 @@
 // The password never leaves the device. From it we derive (PBKDF2 -> HKDF) an account id,
 // an auth token and an AES-GCM key; the server stores only ciphertext.
 const ACCOUNT_KEY = 'daily-plan-30:sync';
-const FIELDS = ['title', 'summary', 'from']; // synced top-level fields (language/calendar/theme stay per-device)
+const FIELDS = ['title', 'summary', 'from', 'theme']; // synced top-level fields (language/calendar stay per-device)
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
@@ -75,11 +75,11 @@ export function merge(a, b) {
 }
 const pick = (s) => ({ days: s.days, mu: s.mu || {}, ...Object.fromEntries(FIELDS.map((f) => [f, s[f]])) });
 
-/* Content that gets uploaded (device preferences left out). */
+/* Content that gets uploaded (language and calendar system stay per device). */
 const shared = (s) => ({ v: s.v, epoch: s.epoch || 0, mu: s.mu || {}, days: s.days, ...Object.fromEntries(FIELDS.map((f) => [f, s[f]])) });
 
 export class SyncError extends Error {
-  constructor(code, status) { super(code); this.code = code; this.status = status; }
+  constructor(code, status, retryAfter) { super(code); this.code = code; this.status = status; this.retryAfter = retryAfter; }
 }
 
 async function call(acc, op, extra = {}) {
@@ -94,7 +94,7 @@ async function call(acc, op, extra = {}) {
   try { j = await r.json(); } catch {}
   if (!r.ok) {
     const code = j.error || (r.status === 404 ? 'unavailable' : 'server');
-    throw new SyncError(code, r.status);
+    throw new SyncError(code, r.status, Number(j.retryAfter) || Number(r.headers.get('Retry-After')) || 0);
   }
   return j;
 }

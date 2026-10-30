@@ -38,7 +38,7 @@ optional end-to-end encrypted sync between your devices.
 
 ### Themes
 
-Tap a swatch on the cover (or open ⋯ → Theme). The choice is remembered per device.
+Tap a swatch on the cover (or open ⋯ → Theme). The choice is remembered and follows you across devices when sync is on.
 
 | Forest | Sage | Lime | Tan | Peach |
 |---|---|---|---|---|
@@ -68,15 +68,15 @@ Tap a swatch on the cover (or open ⋯ → Theme). The choice is remembered per 
 
 Tap the cloud icon in the top bar → **Create account** (username + password), then **Sign in** with the same
 details on your other devices. Changes sync automatically when you edit, when you return to the tab, and every
-~45 seconds while it is open. Offline edits sync when you are back online.
+2 minutes while it is open. Offline edits sync when you are back online.
 
 **How it stays private.** Your password never leaves the device. From username + password the browser derives
 (PBKDF2-SHA256, 600k iterations → HKDF) an account id, a login token and an AES-256-GCM key. The data is encrypted
 on the device before upload, so the server only stores ciphertext.
 
-**Merging.** Each day carries a timestamp and the newest edit wins per day (and per title/summary/start date),
+**Merging.** Each day carries a timestamp and the newest edit wins per day (and per title, summary, start date and theme),
 so two devices can both be used without overwriting each other. *Erase all data* and *Import backup* replace the
-cloud copy on every device. Language, calendar system and theme stay per device.
+cloud copy on every device. Language and calendar system stay per device; your theme syncs.
 
 **Things to know**
 - **There is no password reset.** Forget it and the cloud copy is unreadable. Keep an exported backup.
