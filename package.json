@@ -1,0 +1,10 @@
+{
+  "name": "daily-plan-30",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "30-day challenge planner (EN/FA, RTL) with a password gate for Vercel",
+  "dependencies": {
+    "@vercel/functions": "^3.0.0"
+  }
+}

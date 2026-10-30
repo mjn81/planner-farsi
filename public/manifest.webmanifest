@@ -1,0 +1,17 @@
+{
+  "name": "Daily Plan · 30-day Challenge",
+  "short_name": "Daily Plan",
+  "description": "A 30-day challenge planner — English & فارسی",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbf5ea",
+  "theme_color": "#23513f",
+  "dir": "auto",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
