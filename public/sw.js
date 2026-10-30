@@ -1,5 +1,5 @@
 // Offline support. Bump VERSION whenever you change files, so installed copies refresh.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `daily-plan-${VERSION}`;
 const SHELL = [
   '/', '/assets/css/app.css',

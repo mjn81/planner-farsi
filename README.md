@@ -22,7 +22,10 @@ optional end-to-end encrypted sync between your devices.
 - **No login.** Open it and write. Everything is saved on the device automatically.
 - **Optional account sync** between phone and computer, end-to-end encrypted.
 - **Offline & installable** (PWA), **print / save as PDF** (A4 landscape), JSON **export / import** backups.
-- Phone friendly, with swipe left/right to change days.
+- **Responsive**: the calendar is 7 columns on desktop, 5 on tablets and one easy-to-tap row per day on phones;
+  the cover fills the whole screen at any size. Swipe left/right on a phone to change days.
+- **Print-ready**: every view (cover, calendar, each day) prints on exactly one A4 landscape page, in your theme's colours.
+- **SEO-friendly**: indexable, with descriptive titles per view, social-preview tags, structured data and a no-JavaScript fallback.
 
 ## Screenshots
 
@@ -60,7 +63,7 @@ Tap a swatch on the cover (or open ⋯ → Theme). The choice is remembered and 
 
 - Everything saves on the device as you type. **⋯ → Export backup** downloads a JSON file;
   **Import backup** restores it (also a way to move data without an account).
-- **Print / Save as PDF** is in the same menu.
+- **Print / Save as PDF** is in the same menu: one A4 landscape page per view. In the print dialog, keep *Background graphics* on (Chrome does this automatically) and set margins to *Default*.
 - iPhone: Safari → Share → *Add to Home Screen*. Android / desktop Chrome: *Install app*.
 - Language toggle (فارسی / EN) is in the top bar; calendar system (Jalali / Gregorian) is in ⋯.
 

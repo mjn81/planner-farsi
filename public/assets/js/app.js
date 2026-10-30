@@ -172,7 +172,7 @@ function calHTML() {
   const to = addDays(state.from, DAYS - 1);
   return `<section class="paper cal">
     <div class="cal-top">
-      <h2 class="title">${esc(t('calTitle'))}</h2>
+      <h1 class="title">${esc(t('calTitle'))}</h1>
       <div class="range">
         <div class="rf"><span class="lab">${esc(t('from'))}</span>${dateSelectsHTML()}</div>
         <div class="rf"><span class="lab">${esc(t('to'))}</span><span class="to">${esc(fmtDate(to, state.lang, state.cal, 'medium'))}</span></div>
@@ -213,7 +213,7 @@ function dayHTML(n) {
   return `<section class="paper day" data-day="${n}">
     <div class="day-top">
       <button class="nb" data-act="go" data-n="${Math.max(1, n - 1)}" ${n === 1 ? 'disabled' : ''} aria-label="${esc(t('prev'))}">${ICON.chevL}</button>
-      <h2 class="title">${esc(t('dayN', { n: num(n) }))}</h2>
+      <h1 class="title">${esc(t('dayN', { n: num(n) }))}</h1>
       <button class="nb" data-act="go" data-n="${Math.min(DAYS, n + 1)}" ${n === DAYS ? 'disabled' : ''} aria-label="${esc(t('next'))}">${ICON.chev}</button>
       <div class="banner grow"><input class="hand" ${B('title')} value="${esc(d.title)}" placeholder="${esc(t('dayTitlePlaceholder'))}" aria-label="${esc(t('dayTitlePlaceholder'))}"></div>
       <button class="stat big ${st}" data-act="status" data-n="${n}" aria-label="${esc(stLabel)}" title="${esc(stLabel)}">${st === 'done' ? ICON.check : st === 'miss' ? ICON.cross : ''}</button>
@@ -274,7 +274,12 @@ function render(keepScroll = false) {
   root.lang = state.lang;
   root.dir = fa() ? 'rtl' : 'ltr';
   applyTheme();
-  document.title = `${t('appName')} · ${t('coverKicker')}`;
+  document.title = current.view === 'day' ? `${t('dayN', { n: num(current.n) })} · ${t('appName')}`
+    : current.view === 'cal' ? `${t('calTitle')} · ${t('navCalendar')} · ${t('appName')}`
+    : `${t('appName')} · ${t('coverKicker')}`;
+  let canon = document.querySelector('link[rel=canonical]');
+  if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon); }
+  canon.href = location.origin + '/';
   const body = current.view === 'day' ? dayHTML(current.n) : current.view === 'cal' ? calHTML() : coverHTML();
   app.innerHTML = `${navHTML(current.view, current.n)}<main class="view-${current.view}">${body}</main><footer class="credit">${esc(t('madeBy'))} <a href="https://github.com/mjn81" target="_blank" rel="noopener noreferrer">mjn</a></footer><div id="toast" role="status" aria-live="polite"></div>`;
   window.scrollTo(0, keepScroll ? y : 0);
