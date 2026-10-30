@@ -1,9 +1,9 @@
 // Offline support. Bump VERSION whenever you change files, so installed copies refresh.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `daily-plan-${VERSION}`;
 const SHELL = [
   '/', '/assets/css/app.css',
-  '/assets/js/app.js', '/assets/js/i18n.js', '/assets/js/dates.js',
+  '/assets/js/app.js', '/assets/js/i18n.js', '/assets/js/dates.js', '/assets/js/sync.js',
   '/assets/fonts/vazirmatn-arabic-400-normal.woff2', '/assets/fonts/vazirmatn-arabic-600-normal.woff2', '/assets/fonts/vazirmatn-arabic-800-normal.woff2',
   '/assets/fonts/vazirmatn-latin-400-normal.woff2', '/assets/fonts/vazirmatn-latin-600-normal.woff2', '/assets/fonts/vazirmatn-latin-800-normal.woff2',
   '/assets/fonts/caveat-latin-500-normal.woff2', '/assets/fonts/caveat-latin-700-normal.woff2',
@@ -17,7 +17,6 @@ self.addEventListener('install', (e) => {
     for (const url of SHELL) {
       try {
         const r = await fetch(url, { credentials: 'same-origin' });
-        // never cache a login redirect/page as the app
         if (r.ok && !r.redirected) await c.put(url, r);
       } catch { /* offline during install: runtime caching will fill in */ }
     }
@@ -38,7 +37,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
 
-  // Pages: network first (so the password gate always applies online), cached app as offline fallback.
+  // Pages: network first (always the latest version online), cached app as offline fallback.
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       try {
