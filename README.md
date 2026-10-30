@@ -91,7 +91,7 @@ You need the **whole folder**, not just `public/`. Without sync it is a plain st
 
 1. Push this folder to a GitHub repo and import it in Vercel (*Add New… → Project*). Framework Preset: **Other**.
 2. *(Only for sync)* In the project: **Storage → Create → Upstash Redis** (Marketplace, free plan) → **Connect to Project**.
-   Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically (`UPSTASH_REDIS_REST_URL` / `_TOKEN` also work).
+   Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically (`UPSTASH_REDIS_REST_URL` / `_TOKEN` also work, and any custom prefix such as `PLANNER_ACC_KV_REST_API_URL` is detected).
 3. **Deploy** (redeploy once after connecting the database so the variables are picked up).
 
 If Redis is not connected, the app still works fully; the sync dialog just says sync isn't set up.

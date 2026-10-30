@@ -10,9 +10,18 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const MAX_BLOB = 700_000; // chars; stays well under Upstash's request size limit
 const MAX_FAILS = 10;     // wrong-password attempts per account per 15 minutes
 
+// Vercel may prefix the variables (e.g. PLANNER_ACC_KV_REST_API_URL), so match on the suffix.
+// The read-only token is skipped; we need to write.
+function redisEnv() {
+  const find = (...suffixes) => {
+    const k = Object.keys(process.env).find((n) => !n.endsWith('READ_ONLY_TOKEN') && suffixes.some((s) => n === s || n.endsWith(`_${s}`)));
+    return k ? process.env[k] : '';
+  };
+  return { url: find('KV_REST_API_URL', 'UPSTASH_REDIS_REST_URL'), token: find('KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_TOKEN') };
+}
+
 async function redis(...cmd) {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  const { url, token } = redisEnv();
   const r = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -31,9 +40,8 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ ok: false });
   }
-  const configured = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
-    || (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-  if (!configured) return res.status(503).json({ ok: false, error: 'not-configured' });
+  const { url, token: apiToken } = redisEnv();
+  if (!url || !apiToken) return res.status(503).json({ ok: false, error: 'not-configured' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
